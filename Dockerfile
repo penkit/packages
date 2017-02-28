@@ -12,10 +12,8 @@ RUN set -ex; \
 
 # default to running build script in work directory
 WORKDIR /home/penkit/work
-CMD ["build.sh"]
-
-# install generic build script
-COPY build.sh /usr/local/bin/
+CMD ["abuild", "-r"]
 
 # run as non-root user
 USER penkit
+RUN abuild-keygen -a
