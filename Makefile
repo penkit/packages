@@ -6,7 +6,7 @@ define ABUILD
 		--volume "$$PWD/distfiles:/var/cache/distfiles" \
 		--volume "$$PWD/packages:/home/penkit/packages" \
 		--volume "$$PWD/$1:/home/penkit/work" \
-		$(DOCKER_IMAGE) sh
+		$(DOCKER_IMAGE)
 endef
 
 docker-build:
