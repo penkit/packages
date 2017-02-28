@@ -1,0 +1,240 @@
+# Contributor: Carlo Landmeter <clandmeter@gmail.com>
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=ruby
+pkgver=2.4.0
+_abiver="${pkgver%.*}.0"
+pkgrel=0
+pkgdesc="An object-oriented language for quick and easy programming"
+url="http://www.ruby-lang.org/en/"
+arch="all"
+license="Ruby"
+depends="ca-certificates"
+depends_dev="gmp-dev"
+makedepends="
+  $depends_dev
+  autoconf
+  coreutils
+  db-dev
+  gdbm-dev
+  libffi-dev
+  libressl-dev
+  linux-headers
+  readline-dev
+  yaml-dev
+  zlib-dev
+  "
+subpackages="
+  $pkgname-doc
+  $pkgname-dev
+  $pkgname-bigdecimal::noarch
+  $pkgname-did_you_mean::noarch
+  $pkgname-io-console:io_console
+  $pkgname-irb::noarch
+  $pkgname-json
+  $pkgname-minitest::noarch
+  $pkgname-net-telnet:net_telnet:noarch
+  $pkgname-power_assert::noarch
+  $pkgname-rake::noarch
+  $pkgname-rdoc::noarch
+  $pkgname-test-unit:test_unit:noarch
+  $pkgname-xmlrpc::noarch
+  $pkgname-libs
+  "
+source="ftp://ftp.ruby-lang.org/pub/ruby/${pkgver%.*}/$pkgname-$pkgver.tar.bz2"
+options="!fhs"
+replaces="ruby-gems"
+builddir="$srcdir/$pkgname-$pkgver"
+
+_gemdir="/usr/lib/ruby/gems/$_abiver"
+_rubydir="/usr/lib/ruby/$_abiver"
+_chost="${CHOST/-alpine-/-}"
+
+case "$CARCH" in
+  x86) _arch="i386";;
+  *) _arch="$CARCH";;
+esac
+
+prepare() {
+  default_prepare || return 1
+  cd "$builddir"
+  autoconf
+}
+
+build() {
+  cd "$builddir"
+
+  # -fomit-frame-pointer makes ruby segfault, see gentoo bug #150413
+  # In many places aliasing rules are broken; play it safe
+  # as it's risky with newer compilers to leave it as it is.
+  export CFLAGS="$CFLAGS -fno-omit-frame-pointer -fno-strict-aliasing"
+  export CPPFLAGS="$CPPFLAGS -fno-omit-frame-pointer -fno-strict-aliasing"
+
+  # ruby saves path to install. we want use $PATH
+  export INSTALL=install
+
+  # the configure script does not detect isnan/isinf as macros
+  export ac_cv_func_isnan=yes
+  export ac_cv_func_isinf=yes
+
+  ./configure \
+    --build=$CBUILD \
+    --host=$CHOST \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --mandir=/usr/share/man \
+    --infodir=/usr/share/info \
+    --with-sitedir='/usr/local/lib/site_ruby' \
+    --with-search-path="/usr/lib/site_ruby/\$(ruby_ver)/$_arch-linux" \
+    --enable-pthread \
+    --disable-rpath \
+    --enable-shared \
+    --with-mantype=man \
+    || return 1
+  make || return 1
+  make test || return 1
+}
+
+package() {
+  cd "$builddir"
+
+  make DESTDIR="$pkgdir" install || return 1
+
+  install -m 644 -D COPYING \
+    "$pkgdir"/usr/share/licenses/$pkgname/COPYING || return 1
+
+  rm -R "$pkgdir"$_gemdir/cache/*
+
+  # Remove bundled CA certificates.
+  rm -R "$pkgdir"$_rubydir/rubygems/ssl_certs/*.pem
+
+  if [ -d "$pkgdir"/usr/local ]; then
+    local f=$(cd "$pkgdir" ; find usr/local -type f)
+    if [ -n "$f" ]; then
+      error "Found files in /usr/local:"
+      echo "$f"
+      return 1
+    fi
+  fi
+}
+
+bigdecimal() {
+  pkgdesc="Ruby arbitrary-precision floating point decimal arithmetic"
+  depends="$pkgname"
+
+  _mvgem bigdecimal
+}
+
+did_you_mean() {
+  pkgdesc="Did you mean? experience in Ruby"
+  depends="$pkgname"
+
+  _mvgem did_you_mean
+}
+
+io_console() {
+  pkgdesc="Ruby simple console IO library"
+  depends="$pkgname"
+
+  _mvgem io-console
+  _mv $_rubydir/io \
+    $_rubydir/$_chost/io/console.so
+}
+
+irb() {
+  pkgdesc="The Interactive Ruby"
+  replaces="$pkgname"
+  depends="$pkgname"
+
+  cd "$pkgdir"
+  _mv usr/bin/irb \
+    usr/lib/ruby/$_abiver/irb*
+}
+
+json() {
+  pkgdesc="JSON implementation as a Ruby extension in C"
+  depends="$pkgname"
+
+  _mvgem json
+}
+
+minitest() {
+  pkgdesc="Ruby suite of testing facilities"
+  depends="$pkgname"
+
+  _mvgem minitest
+}
+
+net_telnet() {
+  pkgdesc="Telnet client functionality for Ruby"
+  depends="$pkgname"
+
+  _mvgem net-telnet
+}
+
+power_assert() {
+  pkgdesc="Power Assert for Ruby"
+  depends="$pkgname"
+
+  _mvgem power_assert
+}
+
+rake() {
+  pkgdesc="Ruby based make-like utility"
+  depends="$pkgname"
+
+  _mvgem rake || return 1
+  _mv usr/bin/rake
+}
+
+rdoc() {
+  pkgdesc="Ruby documentation tool"
+  depends="$pkgname $pkgname-json"
+
+  _mvgem rdoc || return 1
+  _mv usr/bin/ri \
+    usr/bin/rdoc
+}
+
+test_unit() {
+  pkgdesc="An xUnit family unit testing framework for Ruby"
+  depends="$pkgname $pkgname-power_assert"
+
+  _mvgem test-unit
+}
+
+xmlrpc() {
+  pkgdesc="XMLRPC library for Ruby"
+  depends="$pkgname"
+
+  _mvgem xmlrpc
+}
+
+libs() {
+  pkgdesc="Libraries necessary to run Ruby"
+  depends=""
+
+  mkdir -p "$subpkgdir"/usr
+  mv "$pkgdir"/usr/lib "$subpkgdir"/usr/
+}
+
+_mv() {
+  local i; for i in "$@"; do
+    mkdir -p "$subpkgdir"/${i%/*}
+    mv "$pkgdir"/${i} "$subpkgdir"/${i%/*}/ || return 1
+  done
+}
+
+_mvgem() {
+  cd "$pkgdir"
+  local path; for path in ./$_rubydir/${1}.rb \
+      ./$_rubydir/${1} \
+      ./$_rubydir/$_chost/${1} \
+      ./$_gemdir/gems/${1}-* \
+      ./$_gemdir/specifications/${1}-* \
+      ./$_gemdir/specifications/default/${1}-* ; do
+    [ ! -e "$pkgdir/$path" ] || _mv "$path"
+  done
+}
+
+sha512sums="bef7bb53f63fb74073d071cc125fb67b273ed0779ef43c2d2969089b9ca21fff1bd012281c5b748f7a3c24dd26e71730d7248c05a01cb23ab2089eb4d02115fe  ruby-2.4.0.tar.bz2"
