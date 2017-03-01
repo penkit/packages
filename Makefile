@@ -13,6 +13,14 @@ endef
 docker-build:
 	@docker build -t $(DOCKER_IMAGE) .
 
+apk-pull:
+	@mkdir -p packages/penkit
+	rsync -r core@penkit.io:packages/penkit/main/ packages/penkit/
+
+apk-push:
+	@mkdir -p packages/penkit
+	rsync -r packages/penkit/ core@penkit.io:packages/penkit/main/
+
 clean:
 	@find . -maxdepth 3 -iname src -type d -exec rm -rf "{}" \;
 
