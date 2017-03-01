@@ -14,6 +14,8 @@ RUN set -ex; \
 WORKDIR /home/penkit/work
 CMD ["abuild", "-r"]
 
+# copy trusted penkit public key
+COPY config/penkit.rsa.pub /etc/apk/keys/
+
 # run as non-root user
 USER penkit
-RUN abuild-keygen -a

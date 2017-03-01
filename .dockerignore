@@ -1,3 +1,4 @@
+config/*.rsa
 distfiles
 main
 packages

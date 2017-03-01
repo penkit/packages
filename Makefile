@@ -3,6 +3,7 @@ DOCKER_IMAGE := penkit/abuild:latest
 define ABUILD
 	mkdir -p distfiles packages
 	docker run --rm -it \
+		--volume "$$PWD/config:/home/penkit/.abuild" \
 		--volume "$$PWD/distfiles:/var/cache/distfiles" \
 		--volume "$$PWD/packages:/home/penkit/packages" \
 		--volume "$$PWD/main/$1:/home/penkit/work" \
