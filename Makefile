@@ -5,7 +5,7 @@ define ABUILD
 	docker run --rm -it \
 		--volume "$$PWD/distfiles:/var/cache/distfiles" \
 		--volume "$$PWD/packages:/home/penkit/packages" \
-		--volume "$$PWD/$1:/home/penkit/work" \
+		--volume "$$PWD/main/$1:/home/penkit/work" \
 		$(DOCKER_IMAGE)
 endef
 
@@ -15,5 +15,5 @@ docker-build:
 clean:
 	@find . -maxdepth 3 -iname src -type d -exec rm -rf "{}" \;
 
-build/%: %/APKBUILD
+build/%: main/%/APKBUILD
 	@$(call ABUILD,$*)
