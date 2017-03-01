@@ -3,7 +3,7 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=ruby
 pkgver=1.9.3
-_abiver="${pkgver%.*}.0"
+_abiver="${pkgver%.*}.1"
 pkgrel=0
 pkgdesc="An object-oriented language for quick and easy programming"
 url="http://www.ruby-lang.org/en/"
@@ -11,22 +11,29 @@ arch="all"
 license="Ruby"
 depends="ca-certificates"
 depends_dev="gmp-dev"
-makedepends="$depends_dev zlib-dev gdbm-dev db-dev readline-dev
-  libffi-dev coreutils yaml-dev linux-headers autoconf openssl-dev"
+makedepends="
+  $depends_dev
+  autoconf
+  coreutils
+  db-dev
+  gdbm-dev
+  libffi-dev
+  linux-headers
+  openssl-dev
+  readline-dev
+  yaml-dev
+  zlib-dev
+  "
 subpackages="
   $pkgname-doc
   $pkgname-dev
   $pkgname-bigdecimal::noarch
-  $pkgname-did_you_mean::noarch
   $pkgname-io-console:io_console
   $pkgname-irb::noarch
   $pkgname-json
   $pkgname-minitest::noarch
-  $pkgname-net-telnet:net_telnet:noarch
-  $pkgname-power_assert::noarch
   $pkgname-rake::noarch
   $pkgname-rdoc::noarch
-  $pkgname-test-unit:test_unit:noarch
   $pkgname-xmlrpc::noarch
   $pkgname-libs
   "
@@ -52,7 +59,6 @@ prepare() {
   default_prepare || return 1
   cd "$builddir"
   cp "$srcdir/config.sub" "./tool/"
-  patch < "$srcdir/io.c.patch"
   autoconf
 }
 
@@ -120,13 +126,6 @@ bigdecimal() {
   _mvgem bigdecimal
 }
 
-did_you_mean() {
-  pkgdesc="Did you mean? experience in Ruby"
-  depends="$pkgname"
-
-  _mvgem did_you_mean
-}
-
 io_console() {
   pkgdesc="Ruby simple console IO library"
   depends="$pkgname"
@@ -160,20 +159,6 @@ minitest() {
   _mvgem minitest
 }
 
-net_telnet() {
-  pkgdesc="Telnet client functionality for Ruby"
-  depends="$pkgname"
-
-  _mvgem net-telnet
-}
-
-power_assert() {
-  pkgdesc="Power Assert for Ruby"
-  depends="$pkgname"
-
-  _mvgem power_assert
-}
-
 rake() {
   pkgdesc="Ruby based make-like utility"
   depends="$pkgname"
@@ -189,13 +174,6 @@ rdoc() {
   _mvgem rdoc || return 1
   _mv usr/bin/ri \
     usr/bin/rdoc
-}
-
-test_unit() {
-  pkgdesc="An xUnit family unit testing framework for Ruby"
-  depends="$pkgname $pkgname-power_assert"
-
-  _mvgem test-unit
 }
 
 xmlrpc() {
