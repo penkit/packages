@@ -1,4 +1,4 @@
-FROM penkit/alpine:latest
+FROM penkit/alpine:3.5
 
 # always run as penkit user
 ENV RUN_AS penkit
