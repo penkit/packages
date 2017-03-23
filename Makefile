@@ -12,7 +12,7 @@ define ABUILD
 endef
 
 docker-build:
-	@docker build --pull -t $(DOCKER_IMAGE) .
+	@docker build --pull --no-cache -t $(DOCKER_IMAGE) .
 
 docker-push:
 	@docker push $(DOCKER_IMAGE)
